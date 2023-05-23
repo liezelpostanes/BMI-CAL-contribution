@@ -1,64 +1,21 @@
 <!DOCTYPE html>
+<html>
 <head>
   <link href="https://fonts.googleapis.com/css?family=Quicksand:400,700" rel="stylesheet">
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-  <script>
-    $(document).ready(function() {
-      $('#submit').click(function(event) {
-        var age = parseInt($('#age').val());
-        var height = parseInt($('#height').val());
-        var weight = parseInt($('#weight').val());
-        var gender = $('input[name=radio]:checked').val();
-
-        // Validate input
-        if (age <= 0 || height <= 0 || weight <= 0 || (gender !== 'M' && gender !== 'F')) {
-          alert('All fields are required!');
-          return;
-        }
-
-        // Prepare the data as a JSON payload
-        var data = JSON.stringify({
-          "age": age,
-          "height": height,
-          "weight": weight,
-          "gender": gender
-        });
-
-        // Send the AJAX request
-        $.ajax({
-          url: "cgi-bin/post.o",
-          type: "POST",
-          data: data,
-          contentType: "application/json",
-          success: function(response) {
-            // Handle the response
-            var result = JSON.parse(response);
-            var bmi = result.bmi.toFixed(2);
-            var category = result.category;
-            var resultText = "BMI: " + bmi + " - " + category;
-
-            $('#result').text(resultText);
-          },
-          error: function(xhr, status, error) {
-            console.error("AJAX request error:", status, error);
-          }
-        });
-      });
-    });
-  </script>
+  <link rel="stylesheet" href="index.css">
 </head>
 <body>
-  <form class="form" id="form" onsubmit="return validateForm()">
+  <form class="form" id="form">
     <div class="row-one">
       <h3>BODY MASS INDEX CALCULATOR</h3>
       <input type="text" class="text-input" id="name" autocomplete="off" required><p class="text">Name</p>
       <input type="text" class="text-input" id="age" autocomplete="off" required><p class="text">Age</p>
       <label class="container">
-        <input type="radio" name="radio" value="F" required><p class="text">Female</p>
+        <input type="radio" name="gender" value="F" required><span class="text">Female</span>
         <span class="checkmark"></span>
       </label>
       <label class="container">
-        <input type="radio" name="radio" value="M" required><p class="text">Male</p>
+        <input type="radio" name="gender" value="M" required><span class="text">Male</span>
         <span class="checkmark"></span>
       </label>
     </div>
@@ -71,7 +28,65 @@
     </div>
   </form>
   <p id="result"></p>
-</body>
-<link rel="stylesheet" href="index.css">
-<script src="index.js"></script>
+  <script src="index.js"></script>
+  <script>
+    var age = document.getElementById("age");
+    var height = document.getElementById("height");
+    var weight = document.getElementById("weight");
+    var male = document.querySelector('input[name="gender"][value="M"]');
+    var female = document.querySelector('input[name="gender"][value="F"]');
+    var form = document.getElementById("form");
 
+    function validateForm() {
+      if (age.value == '' || height.value == '' || weight.value == '' || (male.checked == false && female.checked == false)) {
+        alert("All fields are required!");
+        return false;
+      } else {
+        countBmi();
+        return true;
+      }
+    }
+
+    document.getElementById("submit").addEventListener("click", validateForm);
+
+    function countBmi() {
+      var p = [age.value, height.value, weight.value];
+      if (male.checked) {
+        p.push("male");
+      } else if (female.checked) {
+        p.push("female");
+      }
+      form.reset();
+      var bmi = Number(p[2]) / (Number(p[1]) / 100 * Number(p[1]) / 100);
+
+      var result = '';
+      if (bmi < 18.5) {
+        result = 'Underweight';
+      } else if (18.5 <= bmi && bmi <= 24.9) {
+        result = 'Healthy';
+      } else if (25 <= bmi && bmi <= 29.9) {
+        result = 'Overweight';
+      } else if (30 <= bmi && bmi <= 34.9) {
+        result = 'Obese';
+      } else if (35 <= bmi) {
+        result = 'Extremely obese';
+      }
+
+      var h1 = document.createElement("h1");
+      var h2 = document.createElement("h2");
+
+      var t = document.createTextNode(result);
+      var b = document.createTextNode('BMI: ');
+      var r = document.createTextNode(parseFloat(bmi).toFixed(2));
+
+      h1.appendChild(t);
+      h2.appendChild(b);
+      h2.appendChild(r);
+
+      document.getElementById("result").innerHTML = '';
+      document.getElementById("result").appendChild(h1);
+      document.getElementById("result").appendChild(h2);
+    }
+  </script>
+</body>
+</html>
